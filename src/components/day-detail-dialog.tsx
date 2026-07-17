@@ -31,7 +31,7 @@ export function DayDetailDialog({ date, open, onOpenChange }: DayDetailDialogPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[85vh] max-w-2xl flex-col gap-4">
+      <DialogContent className="flex max-h-[85vh] max-w-3xl flex-col gap-4">
         <DialogHeader className="shrink-0">
           <DialogTitle className="font-heading text-xl font-semibold">
             {format(parseISO(date), "EEEE, MMMM d, yyyy")}
