@@ -130,8 +130,29 @@ pub fn copy_to_clipboard(suppress: State<SuppressState>, text: String) -> Result
         let mut guard = suppress.lock().map_err(|e| e.to_string())?;
         *guard = Some(text.clone());
     }
-    let mut clipboard = arboard::Clipboard::new().map_err(|e| e.to_string())?;
-    clipboard.set_text(text).map_err(|e| e.to_string())?;
+
+    // On Linux (X11/Wayland), clipboard content is only served for as long as
+    // the owning client is around to answer paste requests. A short-lived
+    // `Clipboard` that sets text and immediately drops can make the copy
+    // "disappear" the moment this command returns. Spawn a background thread
+    // that keeps serving the selection until something else overwrites it,
+    // matching arboard's documented pattern for this exact scenario.
+    #[cfg(target_os = "linux")]
+    {
+        use arboard::SetExtLinux;
+        std::thread::spawn(move || {
+            if let Ok(mut clipboard) = arboard::Clipboard::new() {
+                let _ = clipboard.set().wait().text(text);
+            }
+        });
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    {
+        let mut clipboard = arboard::Clipboard::new().map_err(|e| e.to_string())?;
+        clipboard.set_text(text).map_err(|e| e.to_string())?;
+    }
+
     Ok(())
 }
 

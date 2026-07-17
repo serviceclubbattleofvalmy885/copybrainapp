@@ -13,6 +13,7 @@ interface UiState {
   sidebarCollapsed: boolean;
   shortcutsOpen: boolean;
   settingsOpen: boolean;
+  aboutOpen: boolean;
   setActiveSection: (section: ActiveSection) => void;
   setView: (view: ViewFilter) => void;
   setSelectedCollectionId: (id: string | null) => void;
@@ -22,6 +23,7 @@ interface UiState {
   toggleSidebar: () => void;
   setShortcutsOpen: (open: boolean) => void;
   setSettingsOpen: (open: boolean) => void;
+  setAboutOpen: (open: boolean) => void;
 }
 
 export const useUiStore = create<UiState>((set) => ({
@@ -33,6 +35,7 @@ export const useUiStore = create<UiState>((set) => ({
   sidebarCollapsed: false,
   shortcutsOpen: false,
   settingsOpen: false,
+  aboutOpen: false,
   setActiveSection: (section) => set({ activeSection: section }),
   setView: (view) =>
     set({ view, selectedCollectionId: null, activeSection: "timeline" }),
@@ -44,4 +47,5 @@ export const useUiStore = create<UiState>((set) => ({
   toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
   setShortcutsOpen: (open) => set({ shortcutsOpen: open }),
   setSettingsOpen: (open) => set({ settingsOpen: open }),
+  setAboutOpen: (open) => set({ aboutOpen: open }),
 }));

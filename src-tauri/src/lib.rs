@@ -6,9 +6,9 @@ mod models;
 
 use db::DbState;
 use std::sync::{Arc, Mutex};
-use tauri::menu::{Menu, MenuItem};
+use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::TrayIconBuilder;
-use tauri::{Manager, WindowEvent};
+use tauri::{Emitter, Manager, WindowEvent};
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
@@ -50,9 +50,21 @@ pub fn run() {
             app.manage(suppress.clone());
             clipboard_watcher::spawn(handle.clone(), suppress);
 
+            // macOS only: run as a pure menu-bar utility (no Dock icon), matching
+            // apps like Trackabi/CCleaner. Windows/Linux have no Dock concept —
+            // hiding the window already removes them from the taskbar, so nothing
+            // extra is needed there.
+            #[cfg(target_os = "macos")]
+            app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+
             let show_item = MenuItem::with_id(app, "show", "Show CopyBrain", true, None::<&str>)?;
+            let about_item = MenuItem::with_id(app, "about", "About CopyBrain", true, None::<&str>)?;
+            let separator = PredefinedMenuItem::separator(app)?;
             let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-            let tray_menu = Menu::with_items(app, &[&show_item, &quit_item])?;
+            let tray_menu = Menu::with_items(
+                app,
+                &[&show_item, &about_item, &separator, &quit_item],
+            )?;
 
             TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
@@ -60,6 +72,13 @@ pub fn run() {
                 .show_menu_on_left_click(true)
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "show" => toggle_main_window(app),
+                    "about" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                        let _ = app.emit("show-about", ());
+                    }
                     "quit" => app.exit(0),
                     _ => {}
                 })

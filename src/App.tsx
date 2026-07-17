@@ -38,6 +38,7 @@ function App() {
     setShortcutsOpen,
     setSearchQuery,
     activeSection,
+    setAboutOpen,
   } = useUiStore();
   const queryClient = useQueryClient();
 
@@ -59,6 +60,13 @@ function App() {
       unlisten.then((fn) => fn());
     };
   }, [queryClient]);
+
+  useEffect(() => {
+    const unlisten = listen("show-about", () => setAboutOpen(true));
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, [setAboutOpen]);
 
   // Responsive: auto-collapse the sidebar when the window gets narrow.
   // Uses ResizeObserver (not window.innerWidth on mount) because the Tauri

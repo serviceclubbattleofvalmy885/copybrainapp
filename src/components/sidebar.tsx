@@ -91,11 +91,12 @@ export function Sidebar() {
     setShortcutsOpen,
     settingsOpen,
     setSettingsOpen,
+    aboutOpen,
+    setAboutOpen,
   } = useUiStore();
   const { data: stats } = useStats();
   const { data: collections } = useCollections();
   const [createOpen, setCreateOpen] = useState(false);
-  const [aboutOpen, setAboutOpen] = useState(false);
 
   function select(v: ViewFilter) {
     setView(v);
