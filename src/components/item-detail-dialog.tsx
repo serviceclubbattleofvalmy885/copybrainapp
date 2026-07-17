@@ -57,7 +57,7 @@ export function ItemDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[85vh] max-w-3xl flex-col gap-4">
+      <DialogContent className="flex max-h-[85vh] max-w-xl flex-col gap-4">
         <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <span className="flex size-6 items-center justify-center rounded-md bg-muted text-muted-foreground">
