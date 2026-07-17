@@ -16,6 +16,8 @@ interface TimelineListProps {
   onCopy: (text: string) => void;
   onToggleFavorite: (id: string) => void;
   onDelete: (id: string) => void;
+  selectedItemId?: string | null;
+  onSelect?: (id: string) => void;
 }
 
 export function TimelineList({
@@ -26,11 +28,14 @@ export function TimelineList({
   onCopy,
   onToggleFavorite,
   onDelete,
+  selectedItemId,
+  onSelect,
 }: TimelineListProps) {
   const parentRef = useRef<HTMLDivElement>(null);
 
-  const rows = useMemo<Row[]>(() => {
+  const { rows, rowIndexById } = useMemo(() => {
     const result: Row[] = [];
+    const indexById = new Map<string, number>();
     let lastLabel: string | null = null;
     for (const item of items) {
       const label = dateGroupLabel(item.created_at);
@@ -38,9 +43,10 @@ export function TimelineList({
         result.push({ kind: "header", key: `h-${label}-${item.id}`, label });
         lastLabel = label;
       }
+      indexById.set(item.id, result.length);
       result.push({ kind: "item", key: item.id, item });
     }
-    return result;
+    return { rows: result, rowIndexById: indexById };
   }, [items]);
 
   const virtualizer = useVirtualizer({
@@ -59,6 +65,14 @@ export function TimelineList({
       onLoadMore?.();
     }
   }, [virtualItems, rows.length, hasNextPage, isFetchingNextPage, onLoadMore]);
+
+  useEffect(() => {
+    if (!selectedItemId) return;
+    const index = rowIndexById.get(selectedItemId);
+    if (index !== undefined) {
+      virtualizer.scrollToIndex(index, { align: "auto" });
+    }
+  }, [selectedItemId, rowIndexById, virtualizer]);
 
   return (
     <div ref={parentRef} className="h-full overflow-y-auto px-2">
@@ -91,9 +105,11 @@ export function TimelineList({
               ) : (
                 <ClipboardCard
                   item={row.item}
+                  selected={row.item.id === selectedItemId}
                   onCopy={onCopy}
                   onToggleFavorite={onToggleFavorite}
                   onDelete={onDelete}
+                  onSelect={onSelect}
                 />
               )}
             </div>

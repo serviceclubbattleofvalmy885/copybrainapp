@@ -1,0 +1,151 @@
+import { Check, Copy, FolderPlus, Star, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useAddToCollection, useCollections } from "@/hooks/use-clipboard-data";
+import { contentTypeMeta } from "@/lib/content-type-meta";
+import { dateGroupLabel, timeLabel } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import type { ClipboardItem } from "@/types";
+
+interface ItemDetailDialogProps {
+  item: ClipboardItem | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCopy: (text: string) => void;
+  onToggleFavorite: (id: string) => void;
+  onDelete: (id: string) => void;
+}
+
+export function ItemDetailDialog({
+  item,
+  open,
+  onOpenChange,
+  onCopy,
+  onToggleFavorite,
+  onDelete,
+}: ItemDetailDialogProps) {
+  const [copied, setCopied] = useState(false);
+  const { data: collections } = useCollections();
+  const addToCollection = useAddToCollection();
+
+  if (!item) return null;
+
+  const meta = contentTypeMeta[item.content_type];
+  const Icon = meta.icon;
+
+  function handleCopy() {
+    if (!item) return;
+    onCopy(item.content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1200);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <span className="flex size-6 items-center justify-center rounded-md bg-muted text-muted-foreground">
+              <Icon className="size-3.5" />
+            </span>
+            {meta.label}
+          </DialogTitle>
+          <DialogDescription>
+            {dateGroupLabel(item.created_at)} at {timeLabel(item.created_at)} ·{" "}
+            {item.char_count.toLocaleString()} characters
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="max-h-96 overflow-y-auto rounded-md border border-border bg-muted/30 p-3">
+          <p className="select-text whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground">
+            {item.content}
+          </p>
+        </div>
+
+        <DialogFooter className="sm:justify-between">
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" onClick={handleCopy}>
+              {copied ? (
+                <Check className="size-3.5 text-primary" />
+              ) : (
+                <Copy className="size-3.5" />
+              )}
+              Copy
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onToggleFavorite(item.id)}
+            >
+              <Star
+                className={cn(
+                  "size-3.5",
+                  item.is_favorite && "fill-amber-400 text-amber-400"
+                )}
+              />
+              {item.is_favorite ? "Unfavorite" : "Favorite"}
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button variant="outline" size="sm">
+                    <FolderPlus className="size-3.5" />
+                    Collection
+                  </Button>
+                }
+              />
+              <DropdownMenuContent>
+                <DropdownMenuLabel>Add to collection</DropdownMenuLabel>
+                {collections?.length ? (
+                  collections.map((c) => (
+                    <DropdownMenuItem
+                      key={c.id}
+                      onClick={() =>
+                        addToCollection.mutate({
+                          collectionId: c.id,
+                          itemId: item.id,
+                        })
+                      }
+                    >
+                      {c.name}
+                    </DropdownMenuItem>
+                  ))
+                ) : (
+                  <DropdownMenuItem disabled>
+                    No collections yet
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => {
+              onDelete(item.id);
+              onOpenChange(false);
+            }}
+          >
+            <Trash2 className="size-3.5" />
+            Delete
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

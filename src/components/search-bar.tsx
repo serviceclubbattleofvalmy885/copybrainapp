@@ -9,9 +9,16 @@ export function SearchBar() {
     <div className="relative w-full max-w-md">
       <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
       <Input
+        id="global-search-input"
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="Search clipboard history..."
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            e.currentTarget.blur();
+            setSearchQuery("");
+          }
+        }}
+        placeholder="Search clipboard history... (Ctrl+F)"
         className="pl-8 pr-8"
       />
       {searchQuery && (

@@ -1,10 +1,13 @@
 import { listen } from "@tauri-apps/api/event";
-import { useEffect, useMemo } from "react";
+import { PanelLeft } from "lucide-react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
 import { SearchBar } from "@/components/search-bar";
 import { Sidebar } from "@/components/sidebar";
 import { TimelineList } from "@/components/timeline-list";
+import { useTheme } from "@/hooks/use-theme";
 import {
   useCollectionItems,
   useCollections,
@@ -17,8 +20,23 @@ import {
 import { contentTypeMeta } from "@/lib/content-type-meta";
 import { useUiStore } from "@/store/ui-store";
 
+const SIDEBAR_AUTOCOLLAPSE_WIDTH = 720;
+
 function App() {
-  const { view, searchQuery, selectedCollectionId } = useUiStore();
+  useTheme();
+
+  const {
+    view,
+    searchQuery,
+    selectedCollectionId,
+    selectedItemId,
+    setSelectedItemId,
+    toggleSidebar,
+    setSidebarCollapsed,
+    shortcutsOpen,
+    setShortcutsOpen,
+    setSearchQuery,
+  } = useUiStore();
   const queryClient = useQueryClient();
 
   const timeline = useTimeline(view);
@@ -40,6 +58,16 @@ function App() {
     };
   }, [queryClient]);
 
+  // Responsive: auto-collapse the sidebar when the window gets narrow.
+  useEffect(() => {
+    const applyResponsive = () => {
+      setSidebarCollapsed(window.innerWidth < SIDEBAR_AUTOCOLLAPSE_WIDTH);
+    };
+    applyResponsive();
+    window.addEventListener("resize", applyResponsive);
+    return () => window.removeEventListener("resize", applyResponsive);
+  }, [setSidebarCollapsed]);
+
   const isSearching = searchQuery.trim().length > 0;
 
   const items = useMemo(() => {
@@ -47,6 +75,104 @@ function App() {
     if (selectedCollectionId) return collectionItems.data ?? [];
     return timeline.data?.pages.flat() ?? [];
   }, [isSearching, search.data, selectedCollectionId, collectionItems.data, timeline.data]);
+
+  const moveSelection = useCallback(
+    (delta: number) => {
+      if (items.length === 0) return;
+      const currentIndex = items.findIndex((i) => i.id === selectedItemId);
+      const nextIndex =
+        currentIndex === -1
+          ? 0
+          : Math.min(Math.max(currentIndex + delta, 0), items.length - 1);
+      setSelectedItemId(items[nextIndex].id);
+    },
+    [items, selectedItemId, setSelectedItemId]
+  );
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      const isTyping =
+        !!target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable);
+
+      const mod = e.metaKey || e.ctrlKey;
+
+      if (mod && e.key.toLowerCase() === "f") {
+        e.preventDefault();
+        document.getElementById("global-search-input")?.focus();
+        return;
+      }
+
+      if (mod && e.key.toLowerCase() === "b") {
+        e.preventDefault();
+        toggleSidebar();
+        return;
+      }
+
+      if (isTyping) {
+        if (e.key === "Escape") {
+          setShortcutsOpen(false);
+        }
+        return;
+      }
+
+      switch (e.key) {
+        case "ArrowDown":
+        case "j":
+          e.preventDefault();
+          moveSelection(1);
+          break;
+        case "ArrowUp":
+        case "k":
+          e.preventDefault();
+          moveSelection(-1);
+          break;
+        case "Enter": {
+          const item = items.find((i) => i.id === selectedItemId);
+          if (item) copyToClipboard.mutate(item.content);
+          break;
+        }
+        case "f":
+        case "F": {
+          if (selectedItemId) toggleFavorite.mutate(selectedItemId);
+          break;
+        }
+        case "Escape":
+          if (shortcutsOpen) {
+            setShortcutsOpen(false);
+          } else if (searchQuery) {
+            setSearchQuery("");
+          } else {
+            setSelectedItemId(null);
+          }
+          break;
+        case "?":
+          e.preventDefault();
+          setShortcutsOpen(true);
+          break;
+        default:
+          break;
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [
+    items,
+    selectedItemId,
+    setSelectedItemId,
+    moveSelection,
+    copyToClipboard,
+    toggleFavorite,
+    searchQuery,
+    setSearchQuery,
+    shortcutsOpen,
+    setShortcutsOpen,
+    toggleSidebar,
+  ]);
 
   const headerTitle = isSearching
     ? `Results for "${searchQuery}"`
@@ -63,9 +189,20 @@ function App() {
       <Sidebar />
 
       <main className="flex min-w-0 flex-1 flex-col">
-        <header className="flex shrink-0 items-center justify-between gap-4 border-b border-border px-5 py-3">
-          <div>
-            <h1 className="font-heading text-sm font-semibold">{headerTitle}</h1>
+        <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-3 py-3 sm:px-5">
+          <div className="flex min-w-0 items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={toggleSidebar}
+              aria-label="Toggle sidebar"
+              className="shrink-0"
+            >
+              <PanelLeft className="size-4" />
+            </Button>
+            <h1 className="truncate font-heading text-sm font-semibold">
+              {headerTitle}
+            </h1>
           </div>
           <SearchBar />
         </header>
@@ -89,6 +226,8 @@ function App() {
               onCopy={(text) => copyToClipboard.mutate(text)}
               onToggleFavorite={(id) => toggleFavorite.mutate(id)}
               onDelete={(id) => deleteItem.mutate(id)}
+              selectedItemId={selectedItemId}
+              onSelect={setSelectedItemId}
             />
           )}
         </div>

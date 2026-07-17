@@ -1,4 +1,4 @@
-import { Check, Copy, FolderPlus, Star, Trash2 } from "lucide-react";
+import { Check, Copy, Eye, FolderPlus, Star, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,30 +13,42 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { ItemDetailDialog } from "@/components/item-detail-dialog";
 import { useAddToCollection, useCollections } from "@/hooks/use-clipboard-data";
 import { contentTypeMeta } from "@/lib/content-type-meta";
 import { timeLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { ClipboardItem } from "@/types";
 
+const LONG_CONTENT_THRESHOLD = 180;
+
 interface ClipboardCardProps {
   item: ClipboardItem;
+  selected?: boolean;
   onCopy: (text: string) => void;
   onToggleFavorite: (id: string) => void;
   onDelete: (id: string) => void;
+  onSelect?: (id: string) => void;
 }
 
 export function ClipboardCard({
   item,
+  selected = false,
   onCopy,
   onToggleFavorite,
   onDelete,
+  onSelect,
 }: ClipboardCardProps) {
   const [copied, setCopied] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
   const meta = contentTypeMeta[item.content_type];
   const Icon = meta.icon;
   const { data: collections } = useCollections();
   const addToCollection = useAddToCollection();
+
+  const isLong =
+    item.content.length > LONG_CONTENT_THRESHOLD ||
+    item.content.split("\n").length > 3;
 
   function handleCopy() {
     onCopy(item.content);
@@ -46,7 +58,14 @@ export function ClipboardCard({
 
   return (
     <div
-      className="group relative flex gap-3 rounded-lg border border-transparent px-3 py-2.5 transition-colors hover:border-border hover:bg-accent/50 cursor-default"
+      data-selected={selected || undefined}
+      className={cn(
+        "group relative flex gap-3 rounded-lg border px-3 py-2.5 transition-colors cursor-default",
+        selected
+          ? "border-primary/40 bg-accent"
+          : "border-transparent hover:border-border hover:bg-accent/50"
+      )}
+      onClick={() => onSelect?.(item.id)}
       onDoubleClick={handleCopy}
     >
       <div className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
@@ -69,9 +88,26 @@ export function ClipboardCard({
       <div
         className={cn(
           "flex shrink-0 items-start gap-0.5 opacity-0 transition-opacity group-hover:opacity-100",
-          item.is_favorite && "opacity-100"
+          (item.is_favorite || selected) && "opacity-100"
         )}
       >
+        {isLong && (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => setDetailOpen(true)}
+                />
+              }
+            >
+              <Eye className="size-3.5" />
+            </TooltipTrigger>
+            <TooltipContent>View full content</TooltipContent>
+          </Tooltip>
+        )}
+
         <Tooltip>
           <TooltipTrigger
             render={
@@ -159,6 +195,15 @@ export function ClipboardCard({
           <TooltipContent>Delete</TooltipContent>
         </Tooltip>
       </div>
+
+      <ItemDetailDialog
+        item={item}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        onCopy={onCopy}
+        onToggleFavorite={onToggleFavorite}
+        onDelete={onDelete}
+      />
     </div>
   );
 }
