@@ -32,3 +32,9 @@ pub struct Stats {
     pub favorites: i64,
     pub by_type: Vec<TypeCount>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DayCount {
+    pub day: String,
+    pub count: i64,
+}

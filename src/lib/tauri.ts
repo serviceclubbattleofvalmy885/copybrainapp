@@ -1,5 +1,11 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { ClipboardItem, Collection, ContentType, Stats } from "@/types";
+import type {
+  ClipboardItem,
+  Collection,
+  ContentType,
+  DayCount,
+  Stats,
+} from "@/types";
 
 export interface TimelineParams {
   cursor?: number;
@@ -71,4 +77,20 @@ export function setAutostart(enabled: boolean) {
 
 export function getAutostart() {
   return invoke<boolean>("get_autostart");
+}
+
+export function getActivityCounts(yearMonth: string) {
+  return invoke<DayCount[]>("get_activity_counts", { yearMonth });
+}
+
+export function getItemsByDate(date: string) {
+  return invoke<ClipboardItem[]>("get_items_by_date", { date });
+}
+
+export function exportHistory(path: string) {
+  return invoke<number>("export_history", { path });
+}
+
+export function importHistory(path: string) {
+  return invoke<number>("import_history", { path });
 }

@@ -1,8 +1,9 @@
 import { listen } from "@tauri-apps/api/event";
 import { PanelLeft } from "lucide-react";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { CalendarView } from "@/components/calendar-view";
 import { EmptyState } from "@/components/empty-state";
 import { SearchBar } from "@/components/search-bar";
 import { Sidebar } from "@/components/sidebar";
@@ -36,6 +37,7 @@ function App() {
     shortcutsOpen,
     setShortcutsOpen,
     setSearchQuery,
+    activeSection,
   } = useUiStore();
   const queryClient = useQueryClient();
 
@@ -59,13 +61,20 @@ function App() {
   }, [queryClient]);
 
   // Responsive: auto-collapse the sidebar when the window gets narrow.
+  // Uses ResizeObserver (not window.innerWidth on mount) because the Tauri
+  // webview's initial layout width can be momentarily unreliable, which
+  // previously caused the sidebar to collapse permanently on launch.
+  const rootRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const applyResponsive = () => {
-      setSidebarCollapsed(window.innerWidth < SIDEBAR_AUTOCOLLAPSE_WIDTH);
-    };
-    applyResponsive();
-    window.addEventListener("resize", applyResponsive);
-    return () => window.removeEventListener("resize", applyResponsive);
+    const el = rootRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width;
+      if (!width) return;
+      setSidebarCollapsed(width < SIDEBAR_AUTOCOLLAPSE_WIDTH);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
   }, [setSidebarCollapsed]);
 
   const isSearching = searchQuery.trim().length > 0;
@@ -174,18 +183,24 @@ function App() {
     toggleSidebar,
   ]);
 
-  const headerTitle = isSearching
-    ? `Results for "${searchQuery}"`
-    : selectedCollectionId
-      ? collections?.find((c) => c.id === selectedCollectionId)?.name ?? "Collection"
-      : view === "all"
-        ? "All Clipboard"
-        : view === "favorites"
-          ? "Favorites"
-          : contentTypeMeta[view]?.label ?? "Timeline";
+  const headerTitle =
+    activeSection === "calendar"
+      ? "Calendar"
+      : isSearching
+        ? `Results for "${searchQuery}"`
+        : selectedCollectionId
+          ? collections?.find((c) => c.id === selectedCollectionId)?.name ?? "Collection"
+          : view === "all"
+            ? "All Clipboard"
+            : view === "favorites"
+              ? "Favorites"
+              : contentTypeMeta[view]?.label ?? "Timeline";
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
+    <div
+      ref={rootRef}
+      className="flex h-screen w-screen overflow-hidden bg-background text-foreground"
+    >
       <Sidebar />
 
       <main className="flex min-w-0 flex-1 flex-col">
@@ -204,11 +219,13 @@ function App() {
               {headerTitle}
             </h1>
           </div>
-          <SearchBar />
+          {activeSection === "timeline" && <SearchBar />}
         </header>
 
         <div className="min-h-0 flex-1">
-          {items.length === 0 ? (
+          {activeSection === "calendar" ? (
+            <CalendarView />
+          ) : items.length === 0 ? (
             <EmptyState
               title={isSearching ? "No matches found" : "Nothing here yet"}
               description={

@@ -1,14 +1,17 @@
 import {
+  Calendar,
   ClipboardList,
   FolderClosed,
   Info,
   Keyboard,
   Plus,
+  Settings,
   Star,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { AboutDialog } from "@/components/about-dialog";
 import { CreateCollectionDialog } from "@/components/create-collection-dialog";
+import { SettingsDialog } from "@/components/settings-dialog";
 import { ShortcutsDialog } from "@/components/shortcuts-dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
@@ -79,11 +82,15 @@ export function Sidebar() {
   const {
     view,
     selectedCollectionId,
+    activeSection,
+    setActiveSection,
     setView,
     setSelectedCollectionId,
     sidebarCollapsed,
     shortcutsOpen,
     setShortcutsOpen,
+    settingsOpen,
+    setSettingsOpen,
   } = useUiStore();
   const { data: stats } = useStats();
   const { data: collections } = useCollections();
@@ -135,6 +142,13 @@ export function Sidebar() {
             count={stats?.favorites}
             collapsed={sidebarCollapsed}
             onClick={() => select("favorites")}
+          />
+          <NavRow
+            active={activeSection === "calendar"}
+            icon={<Calendar className="size-4" />}
+            label="Calendar"
+            collapsed={sidebarCollapsed}
+            onClick={() => setActiveSection("calendar")}
           />
         </div>
 
@@ -245,6 +259,20 @@ export function Sidebar() {
             <TooltipTrigger
               render={
                 <button
+                  onClick={() => setSettingsOpen(true)}
+                  aria-label="Settings"
+                  className="flex size-7 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+                />
+              }
+            >
+              <Settings className="size-3.5" />
+            </TooltipTrigger>
+            <TooltipContent side="right">Settings</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <button
                   onClick={() => setAboutOpen(true)}
                   aria-label="About CopyBrain"
                   className="flex size-7 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
@@ -257,17 +285,24 @@ export function Sidebar() {
           </Tooltip>
         </div>
       ) : (
-        <div className="flex items-center border-t border-sidebar-border text-xs text-muted-foreground">
+        <div className="grid grid-cols-3 border-t border-sidebar-border text-xs text-muted-foreground">
           <button
             onClick={() => setShortcutsOpen(true)}
-            className="flex flex-1 items-center gap-2 px-4 py-2.5 text-left transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+            className="flex flex-col items-center gap-1 px-2 py-2.5 transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
           >
             <Keyboard className="size-3.5" />
-            Shortcuts
+            Keys
+          </button>
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="flex flex-col items-center gap-1 px-2 py-2.5 transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+          >
+            <Settings className="size-3.5" />
+            Settings
           </button>
           <button
             onClick={() => setAboutOpen(true)}
-            className="flex flex-1 items-center gap-2 px-4 py-2.5 text-left transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+            className="flex flex-col items-center gap-1 px-2 py-2.5 transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
           >
             <Info className="size-3.5" />
             About
@@ -278,6 +313,7 @@ export function Sidebar() {
       <CreateCollectionDialog open={createOpen} onOpenChange={setCreateOpen} />
       <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
       <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </aside>
   );
 }

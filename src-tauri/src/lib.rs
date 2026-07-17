@@ -99,6 +99,10 @@ pub fn run() {
             commands::get_collection_items,
             commands::set_autostart,
             commands::get_autostart,
+            commands::get_activity_counts,
+            commands::get_items_by_date,
+            commands::export_history,
+            commands::import_history,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

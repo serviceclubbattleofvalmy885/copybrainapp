@@ -61,6 +61,7 @@ export function useToggleFavorite() {
       queryClient.invalidateQueries({ queryKey: ["search"] });
       queryClient.invalidateQueries({ queryKey: ["collection-items"] });
       queryClient.invalidateQueries({ queryKey: ["stats"] });
+      queryClient.invalidateQueries({ queryKey: ["day-items"] });
     },
   });
 }
@@ -74,6 +75,8 @@ export function useDeleteItem() {
       queryClient.invalidateQueries({ queryKey: ["search"] });
       queryClient.invalidateQueries({ queryKey: ["collection-items"] });
       queryClient.invalidateQueries({ queryKey: ["stats"] });
+      queryClient.invalidateQueries({ queryKey: ["day-items"] });
+      queryClient.invalidateQueries({ queryKey: ["activity-counts"] });
     },
   });
 }
@@ -124,6 +127,40 @@ export function useAddToCollection() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["collections"] });
       queryClient.invalidateQueries({ queryKey: ["collection-items"] });
+    },
+  });
+}
+
+export function useActivityCounts(yearMonth: string) {
+  return useQuery({
+    queryKey: ["activity-counts", yearMonth],
+    queryFn: () => api.getActivityCounts(yearMonth),
+  });
+}
+
+export function useDayItems(date: string | null) {
+  return useQuery({
+    queryKey: ["day-items", date],
+    queryFn: () => api.getItemsByDate(date as string),
+    enabled: !!date,
+  });
+}
+
+export function useExportHistory() {
+  return useMutation({
+    mutationFn: api.exportHistory,
+  });
+}
+
+export function useImportHistory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: api.importHistory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["timeline"] });
+      queryClient.invalidateQueries({ queryKey: ["stats"] });
+      queryClient.invalidateQueries({ queryKey: ["activity-counts"] });
+      queryClient.invalidateQueries({ queryKey: ["day-items"] });
     },
   });
 }

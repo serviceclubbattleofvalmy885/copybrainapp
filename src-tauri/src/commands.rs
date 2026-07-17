@@ -1,6 +1,6 @@
 use crate::clipboard_watcher::SuppressState;
 use crate::db::DbState;
-use crate::models::{ClipboardItem, Collection, Stats, TypeCount};
+use crate::models::{ClipboardItem, Collection, DayCount, Stats, TypeCount};
 use rusqlite::{params, Row};
 use tauri::{AppHandle, State};
 use tauri_plugin_autostart::ManagerExt;
@@ -273,6 +273,98 @@ pub fn set_autostart(app: AppHandle, enabled: bool) -> Result<(), String> {
 #[tauri::command]
 pub fn get_autostart(app: AppHandle) -> Result<bool, String> {
     app.autolaunch().is_enabled().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn get_activity_counts(
+    db: State<DbState>,
+    year_month: String,
+) -> Result<Vec<DayCount>, String> {
+    let conn = db.0.lock().map_err(|e| e.to_string())?;
+    let mut stmt = conn
+        .prepare(
+            "SELECT strftime('%Y-%m-%d', created_at / 1000, 'unixepoch') as day, COUNT(*)
+             FROM clipboard_items
+             WHERE strftime('%Y-%m', created_at / 1000, 'unixepoch') = ?1
+             GROUP BY day",
+        )
+        .map_err(|e| e.to_string())?;
+    let rows = stmt
+        .query_map(params![year_month], |r| {
+            Ok(DayCount {
+                day: r.get(0)?,
+                count: r.get(1)?,
+            })
+        })
+        .map_err(|e| e.to_string())?;
+    rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn get_items_by_date(
+    db: State<DbState>,
+    date: String,
+) -> Result<Vec<ClipboardItem>, String> {
+    let conn = db.0.lock().map_err(|e| e.to_string())?;
+    let sql = format!(
+        "SELECT {ITEM_COLUMNS} FROM clipboard_items
+         WHERE strftime('%Y-%m-%d', created_at / 1000, 'unixepoch') = ?1
+         ORDER BY created_at DESC"
+    );
+    let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
+    let rows = stmt
+        .query_map(params![date], row_to_item)
+        .map_err(|e| e.to_string())?;
+    rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn export_history(db: State<DbState>, path: String) -> Result<usize, String> {
+    let items = {
+        let conn = db.0.lock().map_err(|e| e.to_string())?;
+        let sql = format!("SELECT {ITEM_COLUMNS} FROM clipboard_items ORDER BY created_at ASC");
+        let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
+        let rows = stmt
+            .query_map([], row_to_item)
+            .map_err(|e| e.to_string())?;
+        rows.collect::<Result<Vec<_>, _>>()
+            .map_err(|e| e.to_string())?
+    };
+
+    let json = serde_json::to_string_pretty(&items).map_err(|e| e.to_string())?;
+    std::fs::write(&path, json).map_err(|e| e.to_string())?;
+    Ok(items.len())
+}
+
+#[tauri::command]
+pub fn import_history(db: State<DbState>, path: String) -> Result<usize, String> {
+    let content = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+    let items: Vec<ClipboardItem> = serde_json::from_str(&content).map_err(|e| e.to_string())?;
+
+    let mut conn = db.0.lock().map_err(|e| e.to_string())?;
+    let tx = conn.transaction().map_err(|e| e.to_string())?;
+    let mut imported = 0usize;
+    for item in &items {
+        let changed = tx
+            .execute(
+                "INSERT OR IGNORE INTO clipboard_items
+                 (id, content, content_type, app_name, is_favorite, created_at, char_count)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                params![
+                    item.id,
+                    item.content,
+                    item.content_type,
+                    item.app_name,
+                    item.is_favorite as i64,
+                    item.created_at,
+                    item.char_count,
+                ],
+            )
+            .map_err(|e| e.to_string())?;
+        imported += changed;
+    }
+    tx.commit().map_err(|e| e.to_string())?;
+    Ok(imported)
 }
 
 #[tauri::command]

@@ -52,6 +52,7 @@ export function TimelineList({
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => parentRef.current,
+    getItemKey: (index) => rows[index]?.key ?? index,
     estimateSize: (index) => (rows[index]?.kind === "header" ? 36 : 84),
     overscan: 12,
   });

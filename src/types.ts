@@ -28,3 +28,8 @@ export interface Stats {
   favorites: number;
   by_type: TypeCount[];
 }
+
+export interface DayCount {
+  day: string;
+  count: number;
+}
