@@ -6,8 +6,12 @@ static EMAIL_RE: Lazy<Regex> =
 static URL_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(https?://|www\.)\S+$").unwrap());
 static PHONE_RE: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^\+?[0-9][0-9\s\-().]{6,}[0-9]$").unwrap());
+// `.` (not `\S`) so paths containing spaces still match — common on Windows
+// (`C:\Program Files\...`, `C:\Users\John Doe\...`) and not unheard of on
+// macOS/Linux either. `.` doesn't match newlines by default, so multi-line
+// text still correctly falls through to plain "text".
 static FILE_PATH_RE: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"^(/|~/|[A-Za-z]:\\|file://)\S+$").unwrap());
+    Lazy::new(|| Regex::new(r"^(/|~/|[A-Za-z]:\\|file://).+$").unwrap());
 
 pub fn detect_content_type(content: &str) -> &'static str {
     let trimmed = content.trim();
