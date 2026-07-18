@@ -4,6 +4,8 @@
 
 CopyBrain is a modern clipboard timeline application for Windows, macOS, and Linux. Unlike typical clipboard managers that only keep the last few items, CopyBrain automatically archives your entire clipboard history into a searchable timeline — find anything you copied yesterday, last week, last month, or even years ago.
 
+CopyBrain is **open source** and MIT-licensed. Since it stores everything you've ever copied — including things like passwords or tokens that end up on your clipboard by accident — the source is public so anyone can audit exactly what it does with your data (spoiler: nothing leaves your machine) or build it themselves from source instead of trusting a downloaded binary.
+
 ---
 
 ## Features
@@ -231,3 +233,22 @@ The SQLite database (`copybrain.db`) is stored in the OS's default app data dire
 - Browser extension
 - Mobile companion app
 - Database encryption via SQLCipher (optional, currently disabled)
+
+---
+
+## Contributing
+
+Contributions are welcome — bug fixes, features, docs, or just filing an issue.
+
+1. Fork the repo and create a branch off `main`
+2. Follow the existing project structure and conventions (see above)
+3. Make sure `pnpm build` (frontend + TypeScript) and `cargo check` (in `src-tauri/`) both pass
+4. Open a pull request describing what changed and why
+
+For larger changes (new features, architecture changes), open an issue first to discuss the approach before investing time in a PR.
+
+---
+
+## License
+
+MIT — see [LICENSE](./LICENSE).
