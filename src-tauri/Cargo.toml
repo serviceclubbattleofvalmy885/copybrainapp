@@ -1,8 +1,8 @@
 [package]
 name = "copybrain"
-version = "1.0.2"
-description = "A Tauri App"
-authors = ["you"]
+version = "1.0.3"
+description = "CopyBrain — your second brain for everything you copy. Archives your entire clipboard history into a searchable timeline."
+authors = ["zidniryi <zidnirydwan@gmail.com>"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
